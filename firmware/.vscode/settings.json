@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "gpio.h": "c",
+        "st7789.h": "c",
+        "stdint.h": "c",
+        "image.h": "c",
+        "font.h": "c"
+    }
+}
