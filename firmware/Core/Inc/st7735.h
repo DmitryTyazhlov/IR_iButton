@@ -69,4 +69,5 @@
 void st7735_disp_init(void);
 void st7735_output_image(const uint16_t *img);
 void st7735_output_background(uint16_t color);
-void st7735_output_symbol();
+void output_text(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
+                 uint16_t color);

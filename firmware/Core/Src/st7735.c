@@ -102,8 +102,7 @@ void st7735_disp_init(void) {
 
   st7735_write_command(ST7735_INVON);
   st7735_write_command(ST7735_MADCTL);
-  // st7735_write_data(0xC8);
-  st7735_write_data(0x38);
+  st7735_write_data(0xB8);
 
   st7735_write_command(ST7735_COLMOD);
   st7735_write_data(0x05);
@@ -152,22 +151,22 @@ void st7735_disp_init(void) {
 
 void st7735_set_region(uint8_t x_start, uint8_t y_start, uint8_t x_end,
                        uint8_t y_end) {
-  const uint8_t offset_x = 26;
-  const uint8_t offset_y = 1;
+  const uint8_t offset_x = 1;
+  const uint8_t offset_y = 26;
   st7735_write_command(ST7735_CASET);
   st7735_write_data(0x00);
-  st7735_write_data(y_start + offset_y);
+  st7735_write_data(x_start + offset_x);
   // st7735_write_data(x_start + offset_x);
   st7735_write_data(0x00);
-  st7735_write_data(y_end + offset_y);
+  st7735_write_data(x_end + offset_x);
   // st7735_write_data(x_end + offset_x);
 
   st7735_write_command(ST7735_RASET);
   st7735_write_data(0x00);
-  st7735_write_data(x_start + offset_x);
+  st7735_write_data(y_start + offset_y);
   // st7735_write_data(y_start + offset_y);
   st7735_write_data(0x00);
-  st7735_write_data(x_end + offset_x);
+  st7735_write_data(y_end + offset_y);
   // st7735_write_data(y_end + offset_y);
   st7735_write_command(ST7735_RAMWR);
 }
@@ -175,7 +174,7 @@ void st7735_set_region(uint8_t x_start, uint8_t y_start, uint8_t x_end,
 void st7735_output_background(uint16_t color) {
   uint8_t first_byte = (uint8_t)(color >> 8);
   uint8_t second_byte = (uint8_t)color;
-  st7735_set_region(0, 0, 79, 159);
+  st7735_set_region(0, 0, 159, 79);
   for (uint32_t x = 0; x < 12800; x++) {
     st7735_write_data(first_byte);
     st7735_write_data(second_byte);
@@ -190,24 +189,27 @@ void st7735_output_pixel(uint16_t color) {
   st7735_write_data(second_byte);
 }
 
-void st7735_output_symbol() {
-  st7735_set_region(5, 5, 12, 9);
-  for (uint8_t x = 0; x < 5; x++) {
-    for (uint8_t y = 0; y < 8; y++) {
-      if (*(font + x) & (8 >> y)) {
-        st7735_output_pixel(0xffff);
+void st7735_output_symbol(uint8_t symbol, uint8_t x, uint8_t y,
+                          uint16_t color) {
+  st7735_set_region(x, y, x + 8 - 1,
+                    y + 12 - 1);
+  symbol = symbol - ' ';
+  for (uint8_t i = 0; i < FONT_BYTE_PER_SYMBOL; i++) {
+    for (uint8_t j = 0; j < 8; j++) {
+      if (*(SmallFont + i + (symbol * FONT_BYTE_PER_SYMBOL)) & (0x80 >> j)) {
+        st7735_output_pixel(color);
       } else {
-        st7735_output_pixel(0x00);
+        st7735_output_pixel(COLOR_BACKGROUND);
       }
     }
   }
 }
-// void output_text(uint8_t *text, uint32_t size, uint16_t color, uint8_t x,
-// uint8_t y) {
-//   for(uint8_t x = 0; x < 5; x++){
-//     for (uint8_t y = 0; y < 8; y++){
 
-//     }
-//   }
-
-// }
+void output_text(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
+                 uint16_t color) {
+  size--;
+  for (uint32_t i = 0; i < size; i++) {
+    st7735_output_symbol(*(text + i), x + i * 8,
+                         y, color);
+  }
+}

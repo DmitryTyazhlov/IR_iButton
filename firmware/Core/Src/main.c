@@ -19,8 +19,9 @@ int main(void) {
   MX_USART2_UART_Init();
 
   st7735_disp_init();
-  st7735_output_background(ST7735_BLUE);
-  st7735_output_symbol();
+  st7735_output_background(ST7735_BLACK);
+  uint8_t x[] = "Hello world!";
+  output_text(x, sizeof(x), 0, 0, ST7735_GREEN);
 
   while (1) {
   }

@@ -4,6 +4,7 @@
         "st7789.h": "c",
         "stdint.h": "c",
         "image.h": "c",
-        "font.h": "c"
+        "font.h": "c",
+        "main.h": "c"
     }
 }

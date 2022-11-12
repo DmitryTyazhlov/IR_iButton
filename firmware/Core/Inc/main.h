@@ -93,6 +93,8 @@ void Error_Handler(void);
 #define BAT_SCL_GPIO_Port GPIOB
 #define BAT_SDA_Pin GPIO_PIN_7
 #define BAT_SDA_GPIO_Port GPIOB
+
+#define COLOR_BACKGROUND 0x00
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
