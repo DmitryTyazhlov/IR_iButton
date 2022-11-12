@@ -20,8 +20,13 @@ int main(void) {
 
   st7735_disp_init();
   st7735_output_background(ST7735_BLACK);
-  uint8_t x[] = "Hello world!";
-  output_text(x, sizeof(x), 0, 0, ST7735_GREEN);
+  uint8_t x[] = " Ibutton";
+  output_text_16x24(x, sizeof(x), 0, 0, ST7735_GREEN);
+  uint8_t d[] = ">IR";
+  output_text_16x24(d, sizeof(d), 0, 24, ST7735_GREEN);
+  uint8_t l[] = " Settings";
+  output_text_16x24(l, sizeof(l), 0, 48, ST7735_GREEN);
+
 
   while (1) {
   }

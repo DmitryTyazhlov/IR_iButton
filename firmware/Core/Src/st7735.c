@@ -156,18 +156,14 @@ void st7735_set_region(uint8_t x_start, uint8_t y_start, uint8_t x_end,
   st7735_write_command(ST7735_CASET);
   st7735_write_data(0x00);
   st7735_write_data(x_start + offset_x);
-  // st7735_write_data(x_start + offset_x);
   st7735_write_data(0x00);
   st7735_write_data(x_end + offset_x);
-  // st7735_write_data(x_end + offset_x);
 
   st7735_write_command(ST7735_RASET);
   st7735_write_data(0x00);
   st7735_write_data(y_start + offset_y);
-  // st7735_write_data(y_start + offset_y);
   st7735_write_data(0x00);
   st7735_write_data(y_end + offset_y);
-  // st7735_write_data(y_end + offset_y);
   st7735_write_command(ST7735_RAMWR);
 }
 
@@ -189,10 +185,10 @@ void st7735_output_pixel(uint16_t color) {
   st7735_write_data(second_byte);
 }
 
-void st7735_output_symbol(uint8_t symbol, uint8_t x, uint8_t y,
-                          uint16_t color) {
-  st7735_set_region(x, y, x + 8 - 1,
-                    y + 12 - 1);
+void st7735_output_symbol_8x12(uint8_t symbol, uint8_t x, uint8_t y,
+                               uint16_t color) {
+  st7735_set_region(x, y, x + FONT_WIDTH_SYMBOL - 1,
+                    y + FONT_HEIGHT_SYMBOL - 1);
   symbol = symbol - ' ';
   for (uint8_t i = 0; i < FONT_BYTE_PER_SYMBOL; i++) {
     for (uint8_t j = 0; j < 8; j++) {
@@ -205,11 +201,40 @@ void st7735_output_symbol(uint8_t symbol, uint8_t x, uint8_t y,
   }
 }
 
-void output_text(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
-                 uint16_t color) {
+void output_text_8x12(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
+                      uint16_t color) {
   size--;
   for (uint32_t i = 0; i < size; i++) {
-    st7735_output_symbol(*(text + i), x + i * 8,
-                         y, color);
+    st7735_output_symbol_8x12(*(text + i), x + i * FONT_WIDTH_SYMBOL, y, color);
+  }
+}
+
+void st7735_output_symbol_16x24(uint8_t symbol, uint8_t x, uint8_t y,
+                                uint16_t color) {
+  st7735_set_region(x, y, x + FONT_WIDTH_SYMBOL * 2 - 1,
+                    y + FONT_HEIGHT_SYMBOL * 2 - 1);
+  symbol = symbol - ' ';
+  for (uint8_t i = 0; i < FONT_BYTE_PER_SYMBOL; i++) {
+    for (uint8_t b = 0; b < 2; b++) {
+      for (uint8_t j = 0; j < 8; j++) {
+        for (uint8_t a = 0; a < 2; a++) {
+          if (*(SmallFont + i + (symbol * FONT_BYTE_PER_SYMBOL)) &
+              (0x80 >> j)) {
+            st7735_output_pixel(color);
+          } else {
+            st7735_output_pixel(COLOR_BACKGROUND);
+          }
+        }
+      }
+    }
+  }
+}
+
+void output_text_16x24(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
+                       uint16_t color) {
+  size--;
+  for (uint32_t i = 0; i < size; i++) {
+    st7735_output_symbol_16x24(*(text + i), x + i * FONT_WIDTH_SYMBOL * 2, y,
+                              color);
   }
 }
