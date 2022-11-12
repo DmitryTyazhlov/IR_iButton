@@ -1,3 +1,4 @@
 firmware/build
+firmware/.vscode
 .DS_Store
 ir_ibutton
