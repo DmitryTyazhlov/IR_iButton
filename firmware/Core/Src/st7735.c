@@ -31,12 +31,11 @@ inline void st7735_set_data_mode() {
 }
 
 inline void st7735_send_byte(uint8_t data) {
-  HAL_SPI_Transmit(&hspi1, &data, 1, 1);
-}
-
-inline void st7735_send_data(uint8_t *data, uint32_t size) {
-  st7735_set_data_mode();
-  HAL_SPI_Transmit(&hspi1, data, size, 1);
+  while (!(SPI1->SR & SPI_SR_TXE))
+    ;
+  SPI1->DR = data;
+  while (!(SPI1->SR & SPI_SR_RXNE))
+    ;
 }
 
 inline void st7735_write_command(uint8_t data) {
@@ -47,7 +46,6 @@ inline void st7735_write_command(uint8_t data) {
 inline void st7735_write_data(uint8_t data) {
   st7735_set_data_mode();
   st7735_send_byte(data);
-  ;
 }
 
 void st7735_disp_init(void) {
@@ -171,9 +169,10 @@ void st7735_output_background(uint16_t color) {
   uint8_t first_byte = (uint8_t)(color >> 8);
   uint8_t second_byte = (uint8_t)color;
   st7735_set_region(0, 0, 159, 79);
+  st7735_set_data_mode();
   for (uint32_t x = 0; x < 12800; x++) {
-    st7735_write_data(first_byte);
-    st7735_write_data(second_byte);
+    st7735_send_byte(first_byte);
+    st7735_send_byte(second_byte);
   }
 }
 
@@ -231,8 +230,8 @@ void st7735_output_symbol_16x24(uint8_t symbol, uint8_t x, uint8_t y,
   }
 }
 
-void st7735_output_text_16x24(uint8_t *text, uint8_t x,
-                              uint8_t y, uint16_t color) {
+void st7735_output_text_16x24(uint8_t *text, uint8_t x, uint8_t y,
+                              uint16_t color) {
   uint32_t i = 0;
   while (*(text + i) != '\0') {
     st7735_output_symbol_16x24(*(text + i), x + i * FONT_WIDTH_SYMBOL * 2, y,

@@ -23,6 +23,7 @@ void MX_SPI1_Init(void)
   {
     Error_Handler();
   }
+  SPI1->CR1 |= SPI_CR1_SPE;
 
 }
 
