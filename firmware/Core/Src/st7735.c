@@ -201,11 +201,12 @@ void st7735_output_symbol_8x12(uint8_t symbol, uint8_t x, uint8_t y,
   }
 }
 
-void output_text_8x12(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
-                      uint16_t color) {
-  size--;
-  for (uint32_t i = 0; i < size; i++) {
+void st7735_output_text_8x12(uint8_t *text, uint8_t x, uint8_t y,
+                             uint16_t color) {
+  uint32_t i = 0;
+  while (*(text + i) != '\0') {
     st7735_output_symbol_8x12(*(text + i), x + i * FONT_WIDTH_SYMBOL, y, color);
+    i++;
   }
 }
 
@@ -230,11 +231,12 @@ void st7735_output_symbol_16x24(uint8_t symbol, uint8_t x, uint8_t y,
   }
 }
 
-void output_text_16x24(uint8_t *text, uint32_t size, uint8_t x, uint8_t y,
-                       uint16_t color) {
-  size--;
-  for (uint32_t i = 0; i < size; i++) {
+void st7735_output_text_16x24(uint8_t *text, uint8_t x,
+                              uint8_t y, uint16_t color) {
+  uint32_t i = 0;
+  while (*(text + i) != '\0') {
     st7735_output_symbol_16x24(*(text + i), x + i * FONT_WIDTH_SYMBOL * 2, y,
-                              color);
+                               color);
+    i++;
   }
 }
