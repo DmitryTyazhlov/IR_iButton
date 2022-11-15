@@ -51,15 +51,15 @@ inline void st7735_write_data(uint8_t data) {
 void st7735_disp_init(void) {
   st7735_chip_select(false);
   st7735_reset(true);
-  HAL_Delay(100);
+  HAL_Delay(1); //
   st7735_reset(false);
   st7735_chip_select(true);
   HAL_Delay(1);
 
   st7735_write_command(ST7735_SWRESET);
-  HAL_Delay(150);
+  HAL_Delay(1);//
   st7735_write_command(ST7735_SLPOUT);
-  HAL_Delay(500);
+  HAL_Delay(1);//
 
   st7735_write_command(ST7735_FRMCTR1);
   st7735_write_data(0x01);
@@ -142,9 +142,9 @@ void st7735_disp_init(void) {
   st7735_write_data(0x10);
 
   st7735_write_command(ST7735_NORON);
-  HAL_Delay(10);
+  HAL_Delay(1);//
   st7735_write_command(ST7735_DISPON);
-  HAL_Delay(100);
+  HAL_Delay(1);//
 }
 
 void st7735_set_region(uint8_t x_start, uint8_t y_start, uint8_t x_end,
