@@ -1,4 +1,13 @@
-firmware/build
-firmware/.vscode
+# macOS
 .DS_Store
+
+# firmware build output and editor settings
+firmware/build/
+firmware/.vscode/
 ir_ibutton
+
+# KiCad backups
+*.sch-bak
+*.kicad_pcb-bak
+*-rescue.bck
+fp-info-cache
