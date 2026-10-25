@@ -1,33 +1,36 @@
 
 #include "main.h"
 
+#include "buttons.h"
 #include "gpio.h"
+#include "ir.h"
+#include "menu.h"
 #include "spi.h"
-#include "usart.h"
 #include "st7735.h"
-
+#include "tim.h"
+#include "timebase.h"
+#include "usart.h"
 
 void SystemClock_Config(void);
 
 int main(void) {
   HAL_Init();
-
   SystemClock_Config();
 
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
+  timebase_init();
+  ir_tx_init();
 
+  /* peripherals are powered by POW_PERIPH: give the display time to start */
+  HAL_Delay(20);
   st7735_disp_init();
-  st7735_output_background(ST7735_BLACK);
-  uint8_t x[] = " Ibutton";
-  output_text_16x24(x, sizeof(x), 0, 0, ST7735_GREEN);
-  uint8_t d[] = ">IR";
-  output_text_16x24(d, sizeof(d), 0, 24, ST7735_GREEN);
-  uint8_t l[] = " Settings";
-  output_text_16x24(l, sizeof(l), 0, 48, ST7735_GREEN);
 
+  buttons_init();
+  MX_TIM2_Init(); /* 10 ms tick: button scanning */
 
+  menu_run();
   while (1) {
   }
 }
@@ -41,6 +44,7 @@ void SystemClock_Config(void) {
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
+  __HAL_RCC_PWR_CLK_ENABLE();
   /** Configure the main internal regulator output voltage
    */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);

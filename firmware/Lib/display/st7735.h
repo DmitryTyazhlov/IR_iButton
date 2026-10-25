@@ -1,4 +1,11 @@
-#include "stdint.h"
+#ifndef ST7735_H_
+#define ST7735_H_
+
+#include <stdint.h>
+
+#define ST7735_WIDTH 160
+#define ST7735_HEIGHT 80
+
 
 // Set of commands described in ST7735 data sheet.
 #define ST7735_NOP 0x00
@@ -66,9 +73,17 @@
 #define ST7735_WHITE 0xFFFF
 
 void st7735_disp_init(void);
-void st7735_output_image(const uint16_t *img);
 void st7735_output_background(uint16_t color);
-void st7735_output_text_8x12(uint8_t *text, uint8_t x, uint8_t y,
+void st7735_fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
                       uint16_t color);
-void st7735_output_text_16x24(uint8_t *text, uint8_t x, uint8_t y,
-                       uint16_t color);
+void st7735_output_symbol(char symbol, uint8_t x, uint8_t y, uint16_t fg,
+                          uint16_t bg, uint8_t scale);
+void st7735_output_text(const char *text, uint8_t x, uint8_t y, uint16_t fg,
+                        uint16_t bg, uint8_t scale);
+void st7735_output_text_8x12(const char *text, uint8_t x, uint8_t y,
+                             uint16_t color);
+void st7735_output_text_16x24(const char *text, uint8_t x, uint8_t y,
+                              uint16_t color);
+void st7735_sleep(void);
+
+#endif

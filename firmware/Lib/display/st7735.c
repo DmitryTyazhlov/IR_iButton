@@ -4,9 +4,9 @@
 #include "gpio.h"
 #include "main.h"
 #include "spi.h"
-#include "stdbool.h"
+#include <stdbool.h>
 
-inline void st7735_reset(bool x) {
+static inline void st7735_reset(bool x) {
   if (x) {
     HAL_GPIO_WritePin(DISP_RES_GPIO_Port, DISP_RES_Pin, RESET);
   } else {
@@ -14,7 +14,7 @@ inline void st7735_reset(bool x) {
   }
 }
 
-inline void st7735_chip_select(bool x) {
+static inline void st7735_chip_select(bool x) {
   if (x) {
     HAL_GPIO_WritePin(DISP_CS_GPIO_Port, DISP_CS_Pin, RESET);
   } else {
@@ -22,15 +22,15 @@ inline void st7735_chip_select(bool x) {
   }
 }
 
-inline void st7735_set_command_mode() {
+static inline void st7735_set_command_mode() {
   HAL_GPIO_WritePin(DISP_DC_GPIO_Port, DISP_DC_Pin, RESET);
 }
 
-inline void st7735_set_data_mode() {
+static inline void st7735_set_data_mode() {
   HAL_GPIO_WritePin(DISP_DC_GPIO_Port, DISP_DC_Pin, SET);
 }
 
-inline void st7735_send_byte(uint8_t data) {
+static inline void st7735_send_byte(uint8_t data) {
   while (!(SPI1->SR & SPI_SR_TXE))
     ;
   SPI1->DR = data;
@@ -38,12 +38,12 @@ inline void st7735_send_byte(uint8_t data) {
     ;
 }
 
-inline void st7735_write_command(uint8_t data) {
+static inline void st7735_write_command(uint8_t data) {
   st7735_set_command_mode();
   st7735_send_byte(data);
 }
 
-inline void st7735_write_data(uint8_t data) {
+static inline void st7735_write_data(uint8_t data) {
   st7735_set_data_mode();
   st7735_send_byte(data);
 }
@@ -51,15 +51,15 @@ inline void st7735_write_data(uint8_t data) {
 void st7735_disp_init(void) {
   st7735_chip_select(false);
   st7735_reset(true);
-  HAL_Delay(1); //
+  HAL_Delay(10);
   st7735_reset(false);
   st7735_chip_select(true);
-  HAL_Delay(1);
+  HAL_Delay(10);
 
   st7735_write_command(ST7735_SWRESET);
-  HAL_Delay(1);//
+  HAL_Delay(120);
   st7735_write_command(ST7735_SLPOUT);
-  HAL_Delay(1);//
+  HAL_Delay(120);
 
   st7735_write_command(ST7735_FRMCTR1);
   st7735_write_data(0x01);
@@ -142,9 +142,9 @@ void st7735_disp_init(void) {
   st7735_write_data(0x10);
 
   st7735_write_command(ST7735_NORON);
-  HAL_Delay(1);//
+  HAL_Delay(10);
   st7735_write_command(ST7735_DISPON);
-  HAL_Delay(1);//
+  HAL_Delay(20);
 }
 
 void st7735_set_region(uint8_t x_start, uint8_t y_start, uint8_t x_end,
@@ -166,76 +166,57 @@ void st7735_set_region(uint8_t x_start, uint8_t y_start, uint8_t x_end,
 }
 
 void st7735_output_background(uint16_t color) {
-  uint8_t first_byte = (uint8_t)(color >> 8);
-  uint8_t second_byte = (uint8_t)color;
-  st7735_set_region(0, 0, 159, 79);
-  st7735_set_data_mode();
-  for (uint32_t x = 0; x < 12800; x++) {
-    st7735_send_byte(first_byte);
-    st7735_send_byte(second_byte);
-  }
+  st7735_fill_rect(0, 0, ST7735_WIDTH, ST7735_HEIGHT, color);
 }
 
 void st7735_output_pixel(uint16_t color) {
-  uint8_t first_byte = (uint8_t)(color >> 8);
-  uint8_t second_byte = (uint8_t)color;
-
-  st7735_write_data(first_byte);
-  st7735_write_data(second_byte);
+  st7735_send_byte((uint8_t)(color >> 8));
+  st7735_send_byte((uint8_t)color);
 }
 
-void st7735_output_symbol_8x12(uint8_t symbol, uint8_t x, uint8_t y,
-                               uint16_t color) {
-  st7735_set_region(x, y, x + FONT_WIDTH_SYMBOL - 1,
-                    y + FONT_HEIGHT_SYMBOL - 1);
-  symbol = symbol - ' ';
-  for (uint8_t i = 0; i < FONT_BYTE_PER_SYMBOL; i++) {
-    for (uint8_t j = 0; j < 8; j++) {
-      if (*(SmallFont + i + (symbol * FONT_BYTE_PER_SYMBOL)) & (0x80 >> j)) {
-        st7735_output_pixel(color);
-      } else {
-        st7735_output_pixel(COLOR_BACKGROUND);
+void st7735_output_symbol(char symbol, uint8_t x, uint8_t y, uint16_t fg,
+                          uint16_t bg, uint8_t scale) {
+  if (symbol < ' ' || symbol > '~') symbol = '?';
+  const uint8_t *glyph = SmallFont + (symbol - ' ') * FONT_BYTE_PER_SYMBOL;
+  st7735_set_region(x, y, x + FONT_WIDTH_SYMBOL * scale - 1,
+                    y + FONT_HEIGHT_SYMBOL * scale - 1);
+  st7735_set_data_mode();
+  for (uint8_t row = 0; row < FONT_BYTE_PER_SYMBOL; row++) {
+    for (uint8_t ry = 0; ry < scale; ry++) {
+      for (uint8_t bit = 0; bit < 8; bit++) {
+        uint16_t color = (glyph[row] & (0x80 >> bit)) ? fg : bg;
+        for (uint8_t rx = 0; rx < scale; rx++) st7735_output_pixel(color);
       }
     }
   }
 }
 
-void st7735_output_text_8x12(uint8_t *text, uint8_t x, uint8_t y,
+void st7735_output_text(const char *text, uint8_t x, uint8_t y, uint16_t fg,
+                        uint16_t bg, uint8_t scale) {
+  while (*text != '\0' && x + FONT_WIDTH_SYMBOL * scale <= ST7735_WIDTH) {
+    st7735_output_symbol(*text++, x, y, fg, bg, scale);
+    x += FONT_WIDTH_SYMBOL * scale;
+  }
+}
+
+void st7735_output_text_8x12(const char *text, uint8_t x, uint8_t y,
                              uint16_t color) {
-  uint32_t i = 0;
-  while (*(text + i) != '\0') {
-    st7735_output_symbol_8x12(*(text + i), x + i * FONT_WIDTH_SYMBOL, y, color);
-    i++;
-  }
+  st7735_output_text(text, x, y, color, ST7735_BLACK, 1);
 }
 
-void st7735_output_symbol_16x24(uint8_t symbol, uint8_t x, uint8_t y,
-                                uint16_t color) {
-  st7735_set_region(x, y, x + FONT_WIDTH_SYMBOL * 2 - 1,
-                    y + FONT_HEIGHT_SYMBOL * 2 - 1);
-  symbol = symbol - ' ';
-  for (uint8_t i = 0; i < FONT_BYTE_PER_SYMBOL; i++) {
-    for (uint8_t b = 0; b < 2; b++) {
-      for (uint8_t j = 0; j < 8; j++) {
-        for (uint8_t a = 0; a < 2; a++) {
-          if (*(SmallFont + i + (symbol * FONT_BYTE_PER_SYMBOL)) &
-              (0x80 >> j)) {
-            st7735_output_pixel(color);
-          } else {
-            st7735_output_pixel(COLOR_BACKGROUND);
-          }
-        }
-      }
-    }
-  }
-}
-
-void st7735_output_text_16x24(uint8_t *text, uint8_t x, uint8_t y,
+void st7735_output_text_16x24(const char *text, uint8_t x, uint8_t y,
                               uint16_t color) {
-  uint32_t i = 0;
-  while (*(text + i) != '\0') {
-    st7735_output_symbol_16x24(*(text + i), x + i * FONT_WIDTH_SYMBOL * 2, y,
-                               color);
-    i++;
-  }
+  st7735_output_text(text, x, y, color, ST7735_BLACK, 2);
+}
+
+void st7735_fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                      uint16_t color) {
+  st7735_set_region(x, y, x + w - 1, y + h - 1);
+  st7735_set_data_mode();
+  for (uint16_t i = 0; i < (uint16_t)w * h; i++) st7735_output_pixel(color);
+}
+
+void st7735_sleep(void) {
+  st7735_write_command(ST7735_DISPOFF);
+  st7735_write_command(ST7735_SLPIN);
 }

@@ -62,7 +62,10 @@ Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c \
 Core/Src/system_stm32l0xx.c \
-Core/Src/st7735.c
+Core/Src/tim.c
+
+# application and libraries (every .c file in these directories is built)
+C_SOURCES += $(wildcard App/*.c Lib/*/*.c)
 
 # ASM sources
 ASM_SOURCES =  \
@@ -120,6 +123,13 @@ AS_INCLUDES =
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
+-IApp \
+-ILib/display \
+-ILib/buttons \
+-ILib/timebase \
+-ILib/ibutton \
+-ILib/ir \
+-ILib/gauge \
 -IDrivers/STM32L0xx_HAL_Driver/Inc \
 -IDrivers/STM32L0xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32L0xx/Include \

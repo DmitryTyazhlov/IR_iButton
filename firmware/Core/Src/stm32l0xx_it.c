@@ -20,6 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32l0xx_it.h"
+#include "buttons.h"
+#include "ir.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -139,6 +141,41 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32l0xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief EXTI lines 0..1: OK button wakes the device from Stop mode.
+  */
+void EXTI0_1_IRQHandler(void)
+{
+  EXTI->PR = BUT_OK_Pin;
+}
+
+/**
+  * @brief EXTI lines 4..15: IR receiver edges.
+  */
+void EXTI4_15_IRQHandler(void)
+{
+  ir_rx_edge_isr();
+}
+
+/**
+  * @brief TIM2: 10 ms tick for the buttons.
+  */
+void TIM2_IRQHandler(void)
+{
+  if (TIM2->SR & TIM_SR_UIF) {
+    TIM2->SR = ~TIM_SR_UIF;
+    buttons_tick();
+  }
+}
+
+/**
+  * @brief TIM21: 76 kHz tick that toggles the IR LED while sending.
+  */
+void TIM21_IRQHandler(void)
+{
+  ir_tx_carrier_isr();
+}
 
 /* USER CODE BEGIN 1 */
 
